@@ -1,11 +1,10 @@
 package com.jetdrone.nashorn.next;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.script.*;
 
-import java.io.File;
+import java.io.*;
 import java.net.URL;
 
 import static org.junit.Assert.*;
@@ -23,7 +22,7 @@ public class JSRequireTest {
 
     Bindings bindings = new SimpleBindings();
     // create a script loader
-    require = new JSRequire(engine, bindings, new File(url.getPath()).getParent());
+    require = new JSRequire(engine, new File(url.getPath()).getParent());
 
     // emulate NodeJS require
     bindings.put("require", require);
@@ -31,13 +30,13 @@ public class JSRequireTest {
   }
 
   @Test
-  public void testPlainRequire() throws ScriptException {
-    assertNotNull(require.require("./empty"));
+  public void testEmpty() throws ScriptException, NoSuchMethodException {
+    assertNotNull(require.load("./empty"));
   }
 
   @Test
-  public void testRequireCycle() throws ScriptException {
-    assertNotNull(require.require("./main"));
+  public void testRequireCycle() throws ScriptException, NoSuchMethodException {
+    assertNotNull(require.load("./main"));
 
     // expected output:
 
@@ -52,18 +51,7 @@ public class JSRequireTest {
   }
 
   @Test
-  public void testAsClosure() throws ScriptException {
-    assertNotNull(require.require("./closure"));
-
-    // expected output:
-
-//    main starting
-//    a starting
-//    b starting
-//    in b, a.done = false
-//    b done
-//    in a, b.done = true
-//    a done
-//    in main, a.done=true, b.done=true
+  public void testPlainRequire() throws ScriptException, NoSuchMethodException {
+    assertNotNull(require.load("./loader_test.js"));
   }
 }

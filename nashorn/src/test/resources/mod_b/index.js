@@ -1,0 +1,1 @@
+exports.mod_b = 'module b';

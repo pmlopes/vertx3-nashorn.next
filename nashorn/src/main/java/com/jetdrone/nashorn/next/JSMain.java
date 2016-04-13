@@ -5,7 +5,7 @@ import java.io.FileNotFoundException;
 
 public class JSMain {
 
-  public static void main(String[] args) throws ScriptException, FileNotFoundException {
+  public static void main(String[] args) throws ScriptException, FileNotFoundException, NoSuchMethodException {
 
     String mainScript;
 
@@ -25,15 +25,13 @@ public class JSMain {
     }
 
     ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
-    Bindings bindings = new SimpleBindings();
 
     // create a script loader
-    final JSRequire require = new JSRequire(engine, bindings);
+    final JSRequire require = new JSRequire(engine);
     // emulate NodeJS require
-    bindings.put("require", require);
-    engine.setBindings(bindings, ScriptContext.GLOBAL_SCOPE);
+    engine.put("require", require);
 
     // start the app by loading the main script
-    require.require(mainScript);
+    require.load(mainScript);
   }
 }
