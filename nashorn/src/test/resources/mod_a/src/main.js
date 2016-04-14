@@ -1,1 +1,0 @@
-exports.mod_a = 'module a';
