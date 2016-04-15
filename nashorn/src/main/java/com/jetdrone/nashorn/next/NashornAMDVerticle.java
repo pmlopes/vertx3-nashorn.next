@@ -1,23 +1,32 @@
 package com.jetdrone.nashorn.next;
 
 import io.vertx.core.*;
+import io.vertx.core.json.JsonObject;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
+import javax.script.*;
+import java.io.File;
 
 public class NashornAMDVerticle extends AbstractVerticle {
 
-  private final ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
-
   public void start() throws Exception {
-  }
+    // create a new AMD loader
+    final AMD loader = new AMD(vertx);
 
-  /**
-   * If your verticle has simple synchronous clean-up tasks to complete then override this method and put your clean-up
-   * code in there.
-   * @throws Exception
-   */
-  public void stop() throws Exception {
-  }
+    // configure the loader
+    final JsonObject config = config();
+    final String cwd = config.getString("baseUrl", new File(System.getProperty("user.dir")).getCanonicalPath());
 
+    loader.config(
+        new JsonObject()
+            .put("baseUrl", cwd)
+            .put("paths", config.getJsonObject("paths", new JsonObject())));
+
+    // run main
+    try {
+      loader.main(new File(cwd, "main.js").getCanonicalPath());
+    } catch (ScriptException e) {
+      vertx.close();
+      System.exit(1);
+    }
+  }
 }

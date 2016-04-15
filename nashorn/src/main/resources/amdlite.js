@@ -1,17 +1,14 @@
 /* jshint sub:true */
 (
-  /**
-   * amdlite.js
-   *
-   * @param {Object} global
-   * @param {undefined=} undefined
-   */
-  function (global, undefined) {
+/**
+ * amdlite.js
+ *
+ * @param {Object} global
+ * @param {undefined=} undefined
+ */
+  function (global, vertx, undefined) {
 
     'use strict';
-
-    var Timer = Java.type("java.util.Timer");
-    var TimerTask = Java.type("java.util.TimerTask");
 
     /** @const */
     var E_REQUIRE_FAILED = 'malformed require';
@@ -39,6 +36,11 @@
      @type {Object.<boolean>}
      */
     var loads = {};
+
+    var config = {
+      baseUrl: './',
+      paths: []
+    };
 
     /** Module definition.
 
@@ -81,6 +83,13 @@
 
       for (i = dependencies.length; i--;) {
         id = dependencies[i];
+
+        // TODO: is this a plugin?
+
+        console.debug(id);
+
+        // TODO: a relative module either starts by  . or /
+        // TODO: it ends with .js or .json
 
         // normalize relative deps
         // TODO: normalize 'dot dot' segments
@@ -159,40 +168,45 @@
      Module id.
      */
     Module.prototype.loadScript = function (id) {
-      print(id);
-      var script = document.createElement('script'),
-        parent = document.documentElement.children[0];
 
       loads[id] = true;
-      script.onload = script.onreadystatechange = function () {
-        var hasDefinition; // anonymous or matching id
-        var module;
 
-        // exit early if the script isn't loaded
-        if (typeof script.readyState == 'string' && !script.readyState.match(/^(loaded|complete)$/)) {
-          return;
+      // TODO: is this a native module? /^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+[0-9a-z_]$/
+
+      var i, _id, path;
+
+      _id = id;
+
+      for (i = 0; i < config.paths.length; i++) {
+        path = config.paths[i];
+        if (id.indexOf(path.src) == 0) {
+          _id = path.target + id.substr(path.src.length);
+          break;
         }
-        // loading amd modules
-        while ((module = newModules.pop())) {
-          if ((!module.id) || (module.id == id)) {
-            hasDefinition = true;
-            module.id = id;
-          }
-          if (!getCached(module.id)) {
-            cache[module.id] = module;
-          }
+      }
+
+      load(config.baseUrl + '/' + _id + '.js');
+
+      var hasDefinition; // anonymous or matching id
+      var module;
+
+      // loading amd modules
+      while ((module = newModules.pop())) {
+        if ((!module.id) || (module.id == id)) {
+          hasDefinition = true;
+          module.id = id;
         }
-        // loading alien script
-        if (!hasDefinition) {
-          module = new Module(id);
-          cache[id] = module;
+        if (!getCached(module.id)) {
+          cache[module.id] = module;
         }
-        // set export values for modules that have all dependencies ready
-        exportValues();
-        parent.removeChild(script);
-      };
-      script.src = id + '.js';
-      parent.appendChild(script);
+      }
+      // loading alien script
+      if (!hasDefinition) {
+        module = new Module(id);
+        cache[id] = module;
+      }
+      // set export values for modules that have all dependencies ready
+      exportValues();
     };
 
     /** Define a module.
@@ -232,13 +246,14 @@
       newModules.push(module);
       pendingModules.push(module);
 
-      // New timer, run as daemon so the application can quit
-      var timer = new Timer("setTimeout", true);
-      timer.schedule(new TimerTask({
-        run: function () {
+      // async run
+      vertx.runOnContext(function () {
+        try {
           module.loadDependencies();
+        } catch (e) {
+          console.trace(e);
         }
-      }), 0);
+      });
 
       exportValues();
 
@@ -304,6 +319,13 @@
       if (dependencies.push && callback) {
         define(dependencies, callback);
       } else if (typeof dependencies == 'string') {
+        // TODO: is this a cjs? if yes read as string and eval:
+
+        //define(['require', 'module', 'exports'], function (require, module, exports) {
+        //  //@ sourceURL=${filename}
+        //  // orig source
+        //});
+
         return getCached(dependencies).exportValue;
       } else {
         throw new Error(E_REQUIRE_FAILED);
@@ -336,16 +358,39 @@
       return module;
     });
 
+    dynamic('vertx', function () {
+      return vertx;
+    });
+
     // Exports, closure compiler style
 
     global['define'] = define;
     global['define']['amd'] = {
       'lite': {
         // if we support common config later, do it here.
-        'config': function () {
+        'config': function (cfg) {
+          // the loader only supports baseUrl and paths
+          if (cfg.hasOwnProperty('baseUrl')) {
+            config.baseUrl = cfg.baseUrl;
+          }
+          if (cfg.hasOwnProperty('paths')) {
+            var i;
+
+            // the paths are stored as an array for simple traverse
+            var _paths = Object.keys(cfg.paths);
+
+            _paths.sort(function (a, b) {
+              return -1 * a.localeCompare(b);
+            });
+
+            config.paths = [];
+
+            for (i = 0; i < _paths.length; i++) {
+              config.paths.push({src: _paths[i], target: cfg.paths[_paths[i]]});
+            }
+          }
         }
       }
     };
 
-  }(this, undefined));
-
+  }(this, vertx));
