@@ -355,14 +355,21 @@
       if (dependencies.push && callback) {
         define(dependencies, callback);
       } else if (typeof dependencies == 'string') {
-        // TODO: is this a cjs? if yes read as string and eval:
+        var cached = getCached(dependencies);
 
-        //define(['require', 'module', 'exports'], function (require, module, exports) {
-        //  //@ sourceURL=${filename}
-        //  // orig source
-        //});
+        if (cached) {
+          return cached.exportValue;
+        }
 
-        return getCached(dependencies).exportValue;
+        if (!loads.hasOwnProperty(dependencies)) {
+          console.warn('Using require as commonJS require to load', dependencies);
+          // TODO: http://requirejs.org/docs/commonjs.html
+          // need to load dependency as text and after wrap as:
+          //define(['require', 'module', 'exports'], function (require, module, exports) {
+          //  //@ sourceURL=${filename}
+          //  // orig source
+          //});
+        }
       } else {
         throw new Error(E_REQUIRE_FAILED);
       }

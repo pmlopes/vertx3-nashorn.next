@@ -133,10 +133,10 @@ can interactively debug your code.
 Debugging is known to work out of the box with:
 
 * IntelliJ
-* Netbeans
 
 Not tested:
 
+* Netbeans
 * Eclipse
 
 ## Bootstrap a project
