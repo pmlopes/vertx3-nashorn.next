@@ -1,4 +1,4 @@
-define(['vertx', 'durp'], function (vertx, durp) {
+define(['vertx'], function (vertx) {
 
   vertx.createHttpServer().requestHandler(function (req) {
     req.response()
@@ -6,10 +6,10 @@ define(['vertx', 'durp'], function (vertx, durp) {
       .end("Hello from Vert.x!");
   }).listen(8080, function (ar) {
     if (ar.failed()) {
-      return ar.cause().printStackTrace();
+      ar.cause().printStackTrace();
+      exit(1);
     }
 
     console.log('Server ready!');
   });
-
 });

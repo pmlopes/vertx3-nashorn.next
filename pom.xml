@@ -63,7 +63,8 @@
 
   <modules>
     <module>nashorn</module>
-    <module>example</module>
+    <module>examples/bare</module>
+    <module>examples/web</module>
   </modules>
 
 </project>
