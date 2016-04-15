@@ -2,6 +2,8 @@ package com.jetdrone.nashorn.next;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import jdk.nashorn.api.scripting.AbstractJSObject;
+import jdk.nashorn.api.scripting.JSObject;
 
 import javax.script.*;
 import java.util.Locale;
@@ -11,22 +13,71 @@ public final class AMD {
   private final ScriptEngine engine;
   private final Vertx vertx;
 
+  private final JSObject exit;
+
   public AMD(final Vertx vertx) throws ScriptException, NoSuchMethodException {
     // create a engine instance
     engine = new ScriptEngineManager().getEngineByName("nashorn");
     this.vertx = vertx;
+
+    exit = new AbstractJSObject() {
+      @Override
+      public Object call(Object self, Object... arguments) {
+
+        final int exitCode;
+
+        if (arguments != null && arguments.length > 0) {
+          Object retValue = arguments[0];
+          if (retValue instanceof Number) {
+            exitCode = ((Number) retValue).intValue();
+          } else if (retValue instanceof String) {
+            int parsed;
+            try {
+              parsed = Integer.parseInt((String) retValue);
+            } catch (NumberFormatException e) {
+              parsed = -1;
+            }
+            exitCode = parsed;
+          } else {
+            exitCode = -1;
+          }
+        } else {
+          exitCode = 0;
+        }
+
+        vertx.close(res -> {
+          if (res.failed()) {
+            // TODO: should we print this out?
+            System.exit(-1);
+          } else {
+            System.exit(exitCode);
+          }
+        });
+        return null;
+      }
+
+      @Override
+      public boolean isFunction() {
+        return true;
+      }
+    };
 
     // loads the shims and AMD light
     reload();
   }
 
   public void reload() throws ScriptException, NoSuchMethodException {
-    final Bindings bindings = new SimpleBindings();
-    // apply the new empty bindings
-    engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+    final Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
+    // remove the exit and quit functions
+    bindings.remove("exit");
+    bindings.remove("quit");
 
     // install the console object
     ((Invocable) engine).invokeFunction("load", "classpath:console.js");
+
+    // re-add exit and quit but a proper one
+    bindings.put("exit", exit);
+    bindings.put("quit", exit);
 
     // bind vertx instance
     bindings.put("vertx", vertx);

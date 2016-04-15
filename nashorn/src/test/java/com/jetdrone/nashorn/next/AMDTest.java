@@ -161,4 +161,9 @@ public class AMDTest {
   public void testPluginDouble(TestContext ctx) throws ScriptException, NoSuchMethodException {
     run(ctx, "plugin_double");
   }
+
+  @Test(timeout = 10000)
+  public void testPluginVertx(TestContext ctx) throws ScriptException, NoSuchMethodException {
+    run(ctx, "plugin_vertx");
+  }
 }

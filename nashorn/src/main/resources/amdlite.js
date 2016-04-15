@@ -84,10 +84,6 @@
       for (i = dependencies.length; i--;) {
         id = dependencies[i];
 
-        // TODO: is this a plugin?
-
-        console.debug(id);
-
         // TODO: a relative module either starts by  . or /
         // TODO: it ends with .js or .json
 
@@ -103,9 +99,19 @@
           dependencies[i] = id;
         }
 
-        // load deps that haven't started loading yet
-        if (!loads.hasOwnProperty(id)) {
-          this.loadScript(id);
+        var bang = id.indexOf('!');
+
+        // load required plugin
+        if (bang >= 0) {
+          // load deps that haven't started loading yet
+          if (!loads.hasOwnProperty(id)) {
+            this.loadPlugin(id.substr(0, bang), id.substr(bang + 1));
+          }
+        } else {
+          // load deps that haven't started loading yet
+          if (!loads.hasOwnProperty(id)) {
+            this.loadScript(id);
+          }
         }
       }
     };
@@ -171,8 +177,6 @@
 
       loads[id] = true;
 
-      // TODO: is this a native module? /^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+[0-9a-z_]$/
-
       var i, _id, path;
 
       _id = id;
@@ -185,7 +189,12 @@
         }
       }
 
-      load(config.baseUrl + '/' + _id + '.js');
+      if (_id.indexOf(':') != -1) {
+        // url loader
+        load(_id + '.js');
+      } else {
+        load(config.baseUrl + '/' + _id + '.js');
+      }
 
       var hasDefinition; // anonymous or matching id
       var module;
@@ -207,6 +216,33 @@
       }
       // set export values for modules that have all dependencies ready
       exportValues();
+    };
+
+    /** Load a script by module id using a plugin.
+
+     @param {string} pluginId
+     Plugin id
+     @param {string} moduleId
+     Module id.
+     */
+    Module.prototype.loadPlugin = function (pluginId, moduleId) {
+      // load the plugin
+      require([pluginId], function (plugin) {
+        var cfg = config.plugins || {};
+        var onload = function (value) {
+          var id = pluginId + '!' + moduleId;
+
+          var module = new Module(id, undefined, undefined, value);
+
+          newModules.push(module);
+          pendingModules.push(module);
+
+          // set export values for modules that have all dependencies ready
+          exportValues();
+        };
+
+        plugin.load(moduleId, require, onload, cfg[pluginId] || {});
+      });
     };
 
     /** Define a module.
@@ -373,6 +409,7 @@
           if (cfg.hasOwnProperty('baseUrl')) {
             config.baseUrl = cfg.baseUrl;
           }
+
           if (cfg.hasOwnProperty('paths')) {
             var i;
 
@@ -388,6 +425,10 @@
             for (i = 0; i < _paths.length; i++) {
               config.paths.push({src: _paths[i], target: cfg.paths[_paths[i]]});
             }
+          }
+
+          if (cfg.hasOwnProperty('plugins')) {
+            config.plugins = cfg.plugins;
           }
         }
       }

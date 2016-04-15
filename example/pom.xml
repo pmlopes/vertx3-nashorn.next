@@ -44,7 +44,7 @@
               </transformers>
               <artifactSet>
               </artifactSet>
-              <outputFile>${project.basedir}/${project.artifactId}.jar</outputFile>
+              <outputFile>${project.basedir}/run.jar</outputFile>
             </configuration>
           </execution>
         </executions>

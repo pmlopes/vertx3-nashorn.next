@@ -79,13 +79,21 @@
     },
 
     trace: function (e) {
-      // isolate first the first line
-      var idx = e.stack.indexOf('\n');
+      if (e.stack) {
+        // isolate first the first line
+        var idx = e.stack.indexOf('\n');
 
-      var msg = BOLD + RED + e.stack.substr(0, idx) + RESET;
-      var trace = e.stack.substr(idx);
+        var msg = BOLD + RED + e.stack.substr(0, idx) + RESET;
+        var trace = e.stack.substr(idx);
 
-      print.apply(global, [msg + trace]);
+        print.apply(global, [msg + trace]);
+      } else {
+        if (e.printStackTrace) {
+          e.printStackTrace(System.err);
+        } else {
+          print.apply(global, [BOLD + RED + e + RESET]);
+        }
+      }
     },
 
     time: function (label) {
