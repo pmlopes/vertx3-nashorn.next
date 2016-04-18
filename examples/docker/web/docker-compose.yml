@@ -1,0 +1,11 @@
+web:
+  build: .
+  ports:
+   - "8080:8080"
+#  volumes:
+#   - .:/code
+  links:
+   - redis
+redis:
+  image: redis
+

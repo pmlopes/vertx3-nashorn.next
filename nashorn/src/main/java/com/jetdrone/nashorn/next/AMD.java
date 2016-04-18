@@ -4,6 +4,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import jdk.nashorn.api.scripting.AbstractJSObject;
 import jdk.nashorn.api.scripting.JSObject;
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import javax.script.*;
 import java.util.Locale;
@@ -19,6 +20,9 @@ public final class AMD {
     // create a engine instance
     engine = new ScriptEngineManager().getEngineByName("nashorn");
     this.vertx = vertx;
+
+    // register a default codec to allow JSON messages directly from nashorn to the JVM world
+    this.vertx.eventBus().registerDefaultCodec(ScriptObjectMirror.class, new NashornJSObjectMessageCodec(engine));
 
     exit = new AbstractJSObject() {
       @Override
@@ -66,6 +70,7 @@ public final class AMD {
     reload();
   }
 
+  // TODO: this probably makes more sense in the global scope, however the loader probably not...
   public void reload() throws ScriptException, NoSuchMethodException {
     final Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
     // remove the exit and quit functions
@@ -85,6 +90,9 @@ public final class AMD {
     ((Invocable) engine).invokeFunction("load", "classpath:amdlite.js");
     // unbind vertx instance
     bindings.remove("vertx");
+
+    // update JSON to handle native JsonObject/JsonArray types
+    ((Invocable) engine).invokeFunction("load", "classpath:JSON.js");
   }
 
   public void config(final JsonObject config) throws ScriptException {

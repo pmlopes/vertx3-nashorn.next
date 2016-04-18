@@ -44,6 +44,8 @@ There are several additions to the runtime:
 * Console object
 * type AMD plugin - helper to load any java type
 * quit and end functions properly end vert.x
+* Nashorn JSON codec to eventbus
+* Enhanced JSON.stringify
 
 ### AMD support
 
@@ -91,6 +93,16 @@ In order to provide this config you should have a JSON document with the desired
 with `--conf your_json.json`. The runner is the base vert.x Loader so all flags are provided such as `--cluster`,
 etc....
 
+### JS object and the eventbus
+
+This loader defines a user codec that will transform JS objects or arrays to `JsonObject` or `JsonArray` when sent over
+the eventbus.
+
+### Enhanced JSON.stringify
+
+The `JSON.stringify` function has been enhanced to also accept `JsonObject` and `JsonArray` objects, in this case the
+optional arguments (replacer and space) are ignored.
+
 ## How to use
 
 A typical AMD module main module is the file `main.js` so the expected start of your application should be on `main.js`.
@@ -133,10 +145,10 @@ can interactively debug your code.
 Debugging is known to work out of the box with:
 
 * IntelliJ
+* Netbeans
 
 Not tested:
 
-* Netbeans
 * Eclipse
 
 ## Bootstrap a project
