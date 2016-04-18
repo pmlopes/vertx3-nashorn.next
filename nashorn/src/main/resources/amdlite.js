@@ -362,13 +362,13 @@
         }
 
         if (!loads.hasOwnProperty(dependencies)) {
-          console.warn('Using require as commonJS require to load', dependencies);
-          // TODO: http://requirejs.org/docs/commonjs.html
-          // need to load dependency as text and after wrap as:
-          //define(['require', 'module', 'exports'], function (require, module, exports) {
-          //  //@ sourceURL=${filename}
-          //  // orig source
-          //});
+          // Using require as commonJS require
+          var cjs = load(config.baseUrl + '/' + dependencies + '.js');
+          cjs.id = dependencies;
+
+          if (cjs) {
+            return cjs.exportValue;
+          }
         }
       } else {
         throw new Error(E_REQUIRE_FAILED);

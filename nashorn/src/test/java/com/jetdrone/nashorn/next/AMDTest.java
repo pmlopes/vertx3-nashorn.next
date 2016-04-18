@@ -136,13 +136,11 @@ public class AMDTest {
   }
 
   @Test(timeout = 10000)
-  @Ignore
   public void testCjsDefine(TestContext ctx) throws ScriptException, NoSuchMethodException {
     run(ctx, "cjs_define");
   }
 
   @Test(timeout = 10000)
-  @Ignore
   public void testCjsNamed(TestContext ctx) throws ScriptException, NoSuchMethodException {
     run(ctx, "cjs_named");
   }
