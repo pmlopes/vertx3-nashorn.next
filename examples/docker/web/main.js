@@ -1,7 +1,7 @@
-define(['vertx', 'classpath:type!io.vertx.ext.web.Router', 'classpath:type!io.vertx.redis.RedisClient'], function (vertx, Router, RedisClient) {
+define(['vertx', 'classpath:type!io.vertx.ext.web.Router', 'classpath:type!io.vertx.redis.RedisClient', 'classpath:type!io.vertx.redis.RedisOptions'], function (vertx, Router, RedisClient, RedisOptions) {
 
   // Create the redis client
-  var redis = RedisClient.create(vertx);
+  var redis = RedisClient.create(vertx, new RedisOptions().setHost('redis'));
   var router = Router.router(vertx);
 
   router.route().handler(function (ctx) {

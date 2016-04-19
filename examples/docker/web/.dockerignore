@@ -1,1 +1,5 @@
+# Docker related config
+Dockerfile
 docker-compose.yml
+# temp files is run locally
+.vertx

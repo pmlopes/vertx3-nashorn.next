@@ -1,9 +1,9 @@
 web:
   build: .
+#  command: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -jar /usr/vertx/run.jar"
   ports:
+   - "5005:5005"
    - "8080:8080"
-#  volumes:
-#   - .:/code
   links:
    - redis
 redis:

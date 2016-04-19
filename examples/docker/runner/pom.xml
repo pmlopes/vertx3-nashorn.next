@@ -77,6 +77,8 @@
             <argument>build</argument>
             <argument>-t</argument>
             <argument>vertx-nashorn:${project.version}</argument>
+            <argument>-t</argument>
+            <argument>vertx-nashorn:latest</argument>
             <argument>${project.basedir}</argument>
           </arguments>
         </configuration>

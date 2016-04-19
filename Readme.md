@@ -62,9 +62,6 @@ The AMD loader currently supports (passes the official AMD test suite):
 * basic config for paths
 * basic config for relative paths
 * basic plugin loading
-
-Currently missing are:
-
 * loading commonJS defined module
 * loading commonJS named module
 
@@ -219,3 +216,71 @@ to the dependencies block as you would with maven. This will create a runnable j
 project.
 
 After that just add your javascript code.
+
+## How to use with Docker compose
+
+This loader suits perfect with docker compose. As an example, this is how you would build a web counter app backed by
+redis. First you implement your application `main.js` as:
+
+```js
+define(['vertx', 'classpath:type!io.vertx.ext.web.Router', 'classpath:type!io.vertx.redis.RedisClient', 'classpath:type!io.vertx.redis.RedisOptions'], function (vertx, Router, RedisClient, RedisOptions) {
+
+  // Create the redis client
+  var redis = RedisClient.create(vertx, new RedisOptions().setHost('redis'));
+  var router = Router.router(vertx);
+
+  router.route().handler(function (ctx) {
+    redis.incr('hits', function (res) {
+      if (res.failed()) {
+        ctx.fail(res.cause());
+        return;
+      }
+
+      ctx.response()
+        .putHeader('content-type', 'text/html')
+        .end('Hello World! I have been seen ' + res.result() + ' times.');
+    });
+  });
+
+  vertx.createHttpServer().requestHandler(function (req) {
+    router.accept(req);
+  }).listen(8080, '0.0.0.0', function (ar) {
+    if (ar.failed()) {
+      ar.cause().printStackTrace();
+      exit(1);
+    }
+
+    console.log('Server ready!');
+  });
+});
+```
+
+After in the same directory add a `Dockerfile`:
+
+```
+FROM vertx-nashorn:latest
+COPY . /usr/src/app
+EXPOSE 8080
+```
+
+The `vertx-nashorn:latest` image is provided in the examples. This is just a JVM image with the runner jar as described
+in bootstrap a project.
+
+Finally to link to Redis you need to compose your deployment, for this you add the following `docker-compose.yml`:
+
+```yaml
+web:
+  build: .
+#  command: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -jar /usr/vertx/run.jar"
+  ports:
+#   - "5005:5005"
+   - "8080:8080"
+  links:
+   - redis
+redis:
+  image: redis
+```
+
+In case you want to remote debug your application uncomment the command and also the 5005 port. Docker compose gives you
+a quick development environment setup and once you're happy you can publish your application using the provided
+Dockerfile.
