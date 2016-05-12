@@ -257,7 +257,7 @@ define(['vertx', 'classpath:type!io.vertx.ext.web.Router', 'classpath:type!io.ve
 
 After in the same directory add a `Dockerfile`:
 
-```
+```Dockerfile
 FROM vertx-nashorn:latest
 COPY . /usr/src/app
 EXPOSE 8080
