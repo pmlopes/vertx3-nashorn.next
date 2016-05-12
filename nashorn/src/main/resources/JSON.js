@@ -1,4 +1,4 @@
-(function () {
+(function (JSON) {
   var JsonArray = Java.type('io.vertx.core.json.JsonArray');
   var JsonObject = Java.type('io.vertx.core.json.JsonObject');
 
@@ -13,4 +13,4 @@
     }
     return _stringify.apply(JSON, Array.prototype.slice.call(arguments))
   };
-})();
+})(JSON);

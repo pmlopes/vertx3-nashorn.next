@@ -30,11 +30,11 @@ public class EventBusTest {
     vertx.eventBus().registerDefaultCodec(ScriptObjectMirror.class, new NashornJSObjectMessageCodec(engine));
   }
 
-  @Test
+  @Test(timeout = 10000)
   public void testNativeJSObjectOverEB(TestContext ctx) throws ScriptException {
     final Async async = ctx.async();
 
-    vertx.eventBus().consumer("test.address", msg -> {
+    vertx.eventBus().consumer("test.address.object", msg -> {
       ctx.assertNotNull(msg);
       ctx.assertNotNull(msg.body());
       Object res = msg.body();
@@ -43,15 +43,15 @@ public class EventBusTest {
       async.complete();
     });
 
-    engine.eval("eb.send('test.address', {foo: 'bar'})");
+    engine.eval("eb.send('test.address.object', {foo: 'bar'})");
     async.await();
   }
 
-  @Test
+  @Test(timeout = 10000)
   public void testNativeJSArrayOverEB(TestContext ctx) throws ScriptException {
     final Async async = ctx.async();
 
-    vertx.eventBus().consumer("test.address", msg -> {
+    vertx.eventBus().consumer("test.address.array", msg -> {
       ctx.assertNotNull(msg);
       ctx.assertNotNull(msg.body());
       Object res = msg.body();
@@ -60,7 +60,7 @@ public class EventBusTest {
       async.complete();
     });
 
-    engine.eval("eb.send('test.address', ['foo', 'bar'])");
+    engine.eval("eb.send('test.address.array', ['foo', 'bar'])");
     async.await();
   }
 }

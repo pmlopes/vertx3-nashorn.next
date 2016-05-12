@@ -1,7 +1,10 @@
 package com.jetdrone.nashorn.next;
 
 import io.vertx.core.Vertx;
+import io.vertx.core.file.FileSystem;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import jdk.nashorn.api.scripting.AbstractJSObject;
 import jdk.nashorn.api.scripting.JSObject;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
@@ -14,17 +17,25 @@ public final class AMD {
   private final ScriptEngine engine;
   private final Vertx vertx;
 
-  private final JSObject exit;
+  private static final Logger log = LoggerFactory.getLogger(AMD.class);
 
   public AMD(final Vertx vertx) throws ScriptException, NoSuchMethodException {
+    this.vertx = vertx;
+
     // create a engine instance
     engine = new ScriptEngineManager().getEngineByName("nashorn");
-    this.vertx = vertx;
 
     // register a default codec to allow JSON messages directly from nashorn to the JVM world
     this.vertx.eventBus().registerDefaultCodec(ScriptObjectMirror.class, new NashornJSObjectMessageCodec(engine));
 
-    exit = new AbstractJSObject() {
+    final Bindings engineBindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
+    // remove the exit and quit functions
+    engineBindings.remove("exit");
+    engineBindings.remove("quit");
+
+    final Bindings globalBindings = new SimpleBindings();
+
+    final JSObject exit = new AbstractJSObject() {
       @Override
       public Object call(Object self, Object... arguments) {
 
@@ -51,7 +62,7 @@ public final class AMD {
 
         vertx.close(res -> {
           if (res.failed()) {
-            // TODO: should we print this out?
+            log.fatal("Failed to close", res.cause());
             System.exit(-1);
           } else {
             System.exit(exitCode);
@@ -66,33 +77,72 @@ public final class AMD {
       }
     };
 
-    // loads the shims and AMD light
-    reload();
-  }
+    // re-add exit and quit but a proper one
+    globalBindings.put("exit", exit);
+    globalBindings.put("quit", exit);
+    // add async fetch
+    globalBindings.put("fetchText", new AbstractJSObject() {
+      final FileSystem fs = vertx.fileSystem();
 
-  // TODO: this probably makes more sense in the global scope, however the loader probably not...
-  public void reload() throws ScriptException, NoSuchMethodException {
-    final Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
-    // remove the exit and quit functions
-    bindings.remove("exit");
-    bindings.remove("quit");
+      @Override
+      public Object call(final Object self, final Object... arguments) {
+
+        if (arguments != null && arguments.length > 0) {
+          String resource = (String) arguments[0];
+
+          if (arguments.length > 1) {
+            JSObject callback = (JSObject) arguments[1];
+
+            fs.readFile(resource, res -> {
+              if (res.failed()) {
+                if (callback != null) {
+                  callback.call(self, res.cause().getMessage());
+                }
+                return;
+              }
+
+              if (callback != null) {
+                callback.call(self, null, res.result().toString());
+              }
+            });
+
+            return null;
+          }
+
+          return fs.readFileBlocking(resource).toString();
+        }
+
+        return null;
+      }
+
+      @Override
+      public boolean isFunction() {
+        return true;
+      }
+    });
+
+    engine.setBindings(globalBindings, ScriptContext.GLOBAL_SCOPE);
 
     // install the console object
     ((Invocable) engine).invokeFunction("load", "classpath:console.js");
 
-    // re-add exit and quit but a proper one
-    bindings.put("exit", exit);
-    bindings.put("quit", exit);
+    // update JSON to handle native JsonObject/JsonArray types
+    ((Invocable) engine).invokeFunction("load", "classpath:JSON.js");
 
+    // loads the shims and AMD light
+    reload();
+  }
+
+  public void reload() throws ScriptException, NoSuchMethodException {
+    final Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
     // bind vertx instance
     bindings.put("vertx", vertx);
+    // delete any old setup
+    engine.eval("function (global) { if (global.define !== undefined) { delete global['define']; } }(this);");
     // install the loader
     ((Invocable) engine).invokeFunction("load", "classpath:amdlite.js");
     // unbind vertx instance
     bindings.remove("vertx");
-
-    // update JSON to handle native JsonObject/JsonArray types
-    ((Invocable) engine).invokeFunction("load", "classpath:JSON.js");
   }
 
   public void config(final JsonObject config) throws ScriptException {

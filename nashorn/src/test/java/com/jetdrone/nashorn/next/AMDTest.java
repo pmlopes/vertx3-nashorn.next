@@ -70,7 +70,7 @@ public class AMDTest {
     // install the console object
     ((Invocable) engine).invokeFunction("load", "classpath:console.js");
 
-    engine.eval("//@ sourceURL=/index.js\ntry { throw new Error('durp!'); } catch (e) { console.trace(e); }");
+    engine.eval("try { throw new Error('durp!'); } catch (e) { console.trace(e); }\n//@ sourceURL=/index.js");
   }
 
   @Test
