@@ -4,6 +4,7 @@
  * amdlite.js
  *
  * @param {Object} global
+ * @param {Object} vertx
  * @param {undefined=} undefined
  */
   function (global, vertx, undefined) {
@@ -13,27 +14,27 @@
     /** @const */
     var E_REQUIRE_FAILED = 'malformed require';
 
-    /** Modules waiting for dependencies to be exported.
-
-     @type {Array.<Module>}
+    /**
+     * Modules waiting for dependencies to be exported.
+     * @type {Array.<Module>}
      */
     var pendingModules = [];
 
-    /** New modules since the last script loaded.
-
-     @type {Array.<Module>}
+    /**
+     * New modules since the last script loaded.
+     * @type {Array.<Module>}
      */
     var newModules = [];
 
-    /** Loaded modules, keyed by id.
-
-     @type {Object.<Module>}
+    /**
+     * Loaded modules, keyed by id.
+     * @type {Object.<Module>}
      */
     var cache = {};
 
-    /** Names of modules which are loading/loaded.
-
-     @type {Object.<boolean>}
+    /**
+     * Names of modules which are loading/loaded.
+     * @type {Object.<boolean>}
      */
     var loads = {};
 
@@ -42,22 +43,15 @@
       paths: []
     };
 
-    /** Module definition.
-
-     @name Module
-
-     @constructor
-
-     @param {string?=} id
-     Optional string identifying the module.
-     @param {Array.<string>?=} dependencies
-     Optional array of strings identifying the module's dependencies.
-     @param {function(...)?=} factory
-     Optional function returning the export value of the module.
-     @param {?=} exportValue
-     Optional export value for modules without a factory.
-     @param {function(Module)?=} generator
-     Optional function returning a dynamic export value for the module.
+    /**
+     * Module definition.
+     * @name Module
+     * @constructor
+     * @param {String?} id Optional string identifying the module.
+     * @param {Array.<String>?} dependencies Optional array of strings identifying the module's dependencies.
+     * @param {function(...)?} factory Optional function returning the export value of the module.
+     * @param {?} exportValue Optional export value for modules without a factory.
+     * @param {function(Module)?} generator Optional function returning a dynamic export value for the module.
      */
     function Module(id, dependencies, factory, exportValue, generator) {
       this.id = id;
@@ -83,9 +77,6 @@
 
       for (i = dependencies.length; i--;) {
         id = dependencies[i];
-
-        // TODO: a relative module either starts by  . or /
-        // TODO: it ends with .js or .json
 
         // normalize relative deps
         // TODO: normalize 'dot dot' segments
@@ -116,14 +107,12 @@
       }
     };
 
-    /** Check dependencies.
-
-     Checks if all dependencies of a module are ready.
-
-     @param {string=} ignore
-     Module name to ignore, for circular reference check.
-
-     @return {boolean} true if all dependencies are ready, else false.
+    /**
+     * Check dependencies.
+     *
+     * Checks if all dependencies of a module are ready.
+     * @param {string?} ignore Module name to ignore, for circular reference check.
+     * @return {boolean} true if all dependencies are ready, else false.
      */
     Module.prototype.checkDependencies = function (ignore) {
       var dependencies = this.dependencies || [];
@@ -155,11 +144,10 @@
       return true;
     };
 
-    /** Get dependency value.
-
-     Gets the value of a cached or builtin dependency module by id.
-
-     @return the dependency value.
+    /**
+     * Get dependency value.
+     * Gets the value of a cached or builtin dependency module by id.
+     * @return the dependency value.
      */
     Module.prototype.getDependencyValue = function (id) {
       /** @type {Module} */
@@ -168,68 +156,66 @@
       return dep.generator ? dep.generator(this) : dep.exportValue;
     };
 
-    /** Load a script by module id.
-
-     @param {string} id
-     Module id.
+    /**
+     * Load a script by module id.
+     * @param {string} id Module id.
      */
     Module.prototype.loadScript = function (id) {
 
       loads[id] = true;
+      vertx.runOnContext(function () {
+        var i, _id, path;
 
-      var i, _id, path;
+        _id = id;
 
-      _id = id;
-
-      for (i = 0; i < config.paths.length; i++) {
-        path = config.paths[i];
-        if (id.indexOf(path.src) == 0) {
-          _id = path.target + id.substr(path.src.length);
-          break;
+        for (i = 0; i < config.paths.length; i++) {
+          path = config.paths[i];
+          if (id.indexOf(path.src) == 0) {
+            _id = path.target + id.substr(path.src.length);
+            break;
+          }
         }
-      }
 
-      if (_id.indexOf(':') != -1) {
-        // url loader
-        load(_id + '.js');
-      } else {
-        load(config.baseUrl + '/' + _id + '.js');
-      }
-
-      var hasDefinition; // anonymous or matching id
-      var module;
-
-      // loading amd modules
-      while ((module = newModules.pop())) {
-        if ((!module.id) || (module.id == id)) {
-          hasDefinition = true;
-          module.id = id;
+        if (_id.indexOf(':') != -1) {
+          // url loader
+          load(_id + '.js');
+        } else {
+          load(config.baseUrl + '/' + _id + '.js');
         }
-        if (!getCached(module.id)) {
-          cache[module.id] = module;
+
+        var hasDefinition; // anonymous or matching id
+        var module;
+
+        // loading amd modules
+        while ((module = newModules.pop())) {
+          if ((!module.id) || (module.id == id)) {
+            hasDefinition = true;
+            module.id = id;
+          }
+          if (!getCached(module.id)) {
+            cache[module.id] = module;
+          }
         }
-      }
-      // loading alien script
-      if (!hasDefinition) {
-        module = new Module(id);
-        cache[id] = module;
-      }
-      // set export values for modules that have all dependencies ready
-      exportValues();
+        // loading alien script
+        if (!hasDefinition) {
+          module = new Module(id);
+          cache[id] = module;
+        }
+        // set export values for modules that have all dependencies ready
+        exportValues();
+      });
     };
 
-    /** Load a script by module id using a plugin.
-
-     @param {string} pluginId
-     Plugin id
-     @param {string} moduleId
-     Module id.
+    /**
+     * Load a script by module id using a plugin.
+     * @param {string} pluginId Plugin id
+     * @param {string} moduleId Module id.
      */
     Module.prototype.loadPlugin = function (pluginId, moduleId) {
       // load the plugin
       require([pluginId], function (plugin) {
         var cfg = config.plugins || {};
-        var onload = function (value) {
+        var onLoad = function (value) {
           var id = pluginId + '!' + moduleId;
 
           var module = new Module(id, undefined, undefined, value);
@@ -241,20 +227,24 @@
           exportValues();
         };
 
-        plugin.load(moduleId, require, onload, cfg[pluginId] || {});
+        var parentRequire = function () {
+          return require.apply(global, arguments);
+        };
+
+        parentRequire['toUrl'] = function (path) {
+          return config.baseUrl + '/' + path;
+        };
+
+        plugin.load(moduleId, parentRequire, onLoad, cfg[pluginId] || {});
       });
     };
 
-    /** Define a module.
-
-     Wrap Module constructor and fiddle with optional arguments.
-
-     @param {?=} id
-     Module id.
-     @param {?=} dependencies
-     Module dependencies.
-     @param {?=} factory
-     Module factory.
+    /**
+     * Define a module.
+     * Wrap Module constructor and fiddle with optional arguments.
+     * @param {?} id Module id.
+     * @param {?} dependencies Module dependencies.
+     * @param {?} factory Module factory.
      */
     function define(id, dependencies, factory) {
       var argc = arguments.length;
@@ -274,10 +264,31 @@
           id = undefined;
         }
       }
-      if (typeof factory != 'function') {
+
+      if (typeof factory == 'function') {
+        /**
+         * Let's check for any references of sync-type require("moduleID")
+         */
+        factory.toString()
+          .replace(/(\/\*([\s\S]*?)\*\/|([^:]|^)\/\/(.*)$)/mg, "") // Remove any comments first
+          .replace(/(?:require)\(\s*["']([^'"\s]+)["']\s*\)/g, // Now let's check for any sync style require("module") calls
+
+            function ($0, $1) {
+              if (dependencies.indexOf($1) == -1) {
+                /**
+                 * Not actually replacing anything inside factory.toString(),
+                 * but this is a nice, clean, convenient way to add any
+                 * sync-type require() matches to the dependencies array.
+                 */
+                dependencies.push($1);
+              }
+            }
+          );
+      } else {
         exportValue = factory;
         factory = undefined;
       }
+
       module = new Module(id, dependencies, factory, exportValue);
       newModules.push(module);
       pendingModules.push(module);
@@ -296,10 +307,9 @@
       return module;
     }
 
-    /** Get a cached module.
-
-     @param {string} id
-     Module id.
+    /**
+     * Get a cached module.
+     * @param {string} id Module id.
      */
     function getCached(id) {
       if (cache.hasOwnProperty(id)) {
@@ -307,10 +317,10 @@
       }
     }
 
-    /** Export module values.
-
-     For each module with all dependencies ready, set the
-     export value from the factory or exports object.
+    /**
+     * Export module values.
+     *
+     * For each module with all dependencies ready, set the export value from the factory or exports object.
      */
     function exportValues() {
       var count = 0;
@@ -337,39 +347,23 @@
       }
     }
 
-    /** Built-in require function.
-
-     If callback is present, call define, else return the export value
-     of the cached module identified by the first argument.
-
-     https://github.com/amdjs/amdjs-api/blob/master/require.md
-
-     @param {string|Array.<string>} dependencies
-     Module dependencies.
-     @param {function()=} callback
-     Module factory.
-
-     @return {Module|undefined}
+    /**
+     * Built-in require function.
+     *
+     * If callback is present, call define, else return the export value of the cached module identified by the first
+     * argument.
+     *
+     * https://github.com/amdjs/amdjs-api/blob/master/require.md
+     *
+     * @param {string|Array.<string>} dependencies Module dependencies.
+     * @param {function()} callback Module factory.
+     * @return {Module|undefined}
      */
     function require(dependencies, callback) {
       if (dependencies.push && callback) {
         define(dependencies, callback);
       } else if (typeof dependencies == 'string') {
-        var cached = getCached(dependencies);
-
-        if (cached) {
-          return cached.exportValue;
-        }
-
-        if (!loads.hasOwnProperty(dependencies)) {
-          // Using require as commonJS require
-          var cjs = load(config.baseUrl + '/' + dependencies + '.js');
-          cjs.id = dependencies;
-
-          if (cjs) {
-            return cjs.exportValue;
-          }
-        }
+        return getCached(dependencies).exportValue;
       } else {
         throw new Error(E_REQUIRE_FAILED);
       }
@@ -440,5 +434,4 @@
         }
       }
     };
-
-  }(this, vertx));
+  }(this, vertx, undefined));
