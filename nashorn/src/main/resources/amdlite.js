@@ -54,6 +54,7 @@
      * @param {function(Module)?} generator Optional function returning a dynamic export value for the module.
      */
     function Module(id, dependencies, factory, exportValue, generator) {
+      console.log('plugin', id);
       this.id = id;
       this.dependencies = dependencies;
       this.factoryFunction = factory;

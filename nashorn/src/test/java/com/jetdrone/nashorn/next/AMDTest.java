@@ -18,25 +18,32 @@ import static org.junit.Assert.*;
 @RunWith(VertxUnitRunner.class)
 public class AMDTest {
 
-  private static AMD amd;
-  private static ScriptEngine engine;
+  private AMD amd;
+  private ScriptEngine engine;
 
   private static String root;
+  private static Vertx vertx;
 
   @BeforeClass
-  public static void beforeClass() throws ScriptException, NoSuchMethodException {
-    amd = new AMD(Vertx.vertx());
-    engine = amd.getEngine();
-
+  public static void beforeClass() {
     URL url = AMDTest.class.getClassLoader().getResource("empty.txt");
     assertNotNull(url);
     root = new File(url.getPath()).getParent();
+    vertx = Vertx.vertx();
+  }
+
+  @AfterClass
+  public static void afterClass() {
+    vertx.close();
+  }
+
+  @Before
+  public void setup() throws ScriptException, NoSuchMethodException {
+    amd = new AMD(vertx);
+    engine = amd.getEngine();
   }
 
   private void run(TestContext ctx, String base) throws ScriptException, NoSuchMethodException {
-    // reset the loader caches
-    amd.reload();
-
     // configure the loader
     amd.config(new JsonObject().put("baseUrl", new File(root, base).getAbsolutePath()));
 
@@ -163,5 +170,10 @@ public class AMDTest {
   @Test(timeout = 10000)
   public void testPluginVertx(TestContext ctx) throws ScriptException, NoSuchMethodException {
     run(ctx, "plugin_vertx");
+  }
+
+  @Test(timeout = 30000)
+  public void testPluginES6(TestContext ctx) throws ScriptException, NoSuchMethodException {
+    run(ctx, "plugin_es6");
   }
 }

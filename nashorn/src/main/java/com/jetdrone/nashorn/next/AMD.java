@@ -15,18 +15,16 @@ import java.util.Locale;
 public final class AMD {
 
   private final ScriptEngine engine;
-  private final Vertx vertx;
 
   private static final Logger log = LoggerFactory.getLogger(AMD.class);
 
   public AMD(final Vertx vertx) throws ScriptException, NoSuchMethodException {
-    this.vertx = vertx;
-
     // create a engine instance
     engine = new ScriptEngineManager().getEngineByName("nashorn");
 
     // register a default codec to allow JSON messages directly from nashorn to the JVM world
-    this.vertx.eventBus().registerDefaultCodec(ScriptObjectMirror.class, new NashornJSObjectMessageCodec(engine));
+    vertx.eventBus().unregisterDefaultCodec(ScriptObjectMirror.class);
+    vertx.eventBus().registerDefaultCodec(ScriptObjectMirror.class, new NashornJSObjectMessageCodec(engine));
 
     final Bindings engineBindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
     // remove the exit and quit functions
@@ -96,7 +94,7 @@ public final class AMD {
             fs.readFile(resource, res -> {
               if (res.failed()) {
                 if (callback != null) {
-                  callback.call(self, res.cause().getMessage());
+                  callback.call(self, res.cause());
                 }
                 return;
               }
@@ -130,10 +128,7 @@ public final class AMD {
     ((Invocable) engine).invokeFunction("load", "classpath:JSON.js");
 
     // loads the shims and AMD light
-    reload();
-  }
 
-  public void reload() throws ScriptException, NoSuchMethodException {
     final Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
     // bind vertx instance
     bindings.put("vertx", vertx);
