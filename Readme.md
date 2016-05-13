@@ -35,6 +35,7 @@ For this new loader there are several ground breaking changes:
 * No need for maven (unless user needs extra java libraries bundled in the runner)
 * Currently no packaging is provided (distribution is left to the user)
 * A new loader based on AMD (this is small and allows a proper debugging experience)
+* Builtin support for ES6 using babel compiler as a loader plugin
 
 ### Additions
 
@@ -284,3 +285,37 @@ redis:
 In case you want to remote debug your application uncomment the command and also the 5005 port. Docker compose gives you
 a quick development environment setup and once you're happy you can publish your application using the provided
 Dockerfile.
+
+## Using EcmaScript6
+
+Nashorn on JDK8 does not support EcmaScript6, however its support can be achieved using Babel to transpile ES6 code to
+ES5. Say for example that you want to write your next vertx-web application using ES6, you would do something like:
+
+```js
+import vertx from 'vertx';
+import Router from 'classpath:type!io.vertx.ext.web.Router';
+
+const router = Router.router(vertx);
+
+router.route().handler(ctx => {
+  ctx.response()
+    .putHeader("content-type", "text/html")
+    .end("Hello World!");
+});
+
+vertx.createHttpServer().requestHandler(req => {
+  router.accept(req);
+}).listen(8080);
+```
+
+Now nashorn does not support this out of the box, so there is a special bundled plugin that will perform the
+transpilation from ES6 to ES5 and using this loader. For this you need to bootstrap your application like:
+
+```js
+define(['classpath:es6!app/main'], function (app) {
+  console.log('Application loaded!');
+});
+```
+
+It is not recommended to mix ES6 and ES5 since the transpiled code will be using all the babel infrastructure so types
+will most likely not match or be compatible. However basic JSON objects and closures **should** be fine.
