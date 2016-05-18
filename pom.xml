@@ -66,6 +66,7 @@
     <module>examples/bare</module>
     <module>examples/web</module>
     <module>examples/es6</module>
+    <module>examples/blockchain</module>
   </modules>
 
 </project>

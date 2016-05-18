@@ -98,8 +98,8 @@ the eventbus.
 
 ### Enhanced JSON.stringify
 
-The `JSON.stringify` function has been enhanced to also accept `JsonObject` and `JsonArray` objects, in this case the
-optional arguments (replacer and space) are ignored.
+The `JSON.stringify` function has been enhanced to also accept `JsonObject`, `JsonArray`, `Map` and `List` objects, in
+this case the optional arguments (replacer and space) are ignored.
 
 ## How to use
 
