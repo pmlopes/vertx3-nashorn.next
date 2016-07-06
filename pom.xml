@@ -67,6 +67,7 @@
     <module>examples/web</module>
     <module>examples/es6</module>
     <module>examples/blockchain</module>
+    <module>examples/mongo</module>
   </modules>
 
 </project>
