@@ -70,6 +70,7 @@
     <module>examples/mongo</module>
     <module>jython</module>
     <module>examples/python</module>
+    <module>examples/scala</module>
   </modules>
 
 </project>

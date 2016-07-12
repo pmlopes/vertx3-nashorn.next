@@ -1,4 +1,4 @@
-package com.jetdrone.jython.next;
+package com.jetdrone.scala.next;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.logging.Logger;
