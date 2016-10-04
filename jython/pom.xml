@@ -14,10 +14,6 @@
   <artifactId>polyglot.jython</artifactId>
   <packaging>jar</packaging>
 
-  <properties>
-    <vertx.version>3.2.1</vertx.version>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>io.vertx</groupId>
