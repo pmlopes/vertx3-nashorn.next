@@ -35,7 +35,7 @@
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <manifestEntries>
                     <Main-Class>io.vertx.core.Launcher</Main-Class>
-                    <Main-Verticle>com.jetdrone.scala.next.JythonVerticle</Main-Verticle>
+                    <Main-Verticle>com.jetdrone.python.next.JythonVerticle</Main-Verticle>
                   </manifestEntries>
                 </transformer>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
