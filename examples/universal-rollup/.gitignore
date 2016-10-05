@@ -7,4 +7,3 @@ target
 .vertx
 run.jar
 /server.js
-/server.js.map

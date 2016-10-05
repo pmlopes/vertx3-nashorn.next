@@ -38,6 +38,5 @@ export default {
       browser: true,
       main: true
     })
-  ],
-  sourceMap: true
+  ]
 }
