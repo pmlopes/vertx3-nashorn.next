@@ -73,6 +73,7 @@
     <module>examples/python</module>
     <module>examples/scala</module>
     <module>examples/universal</module>
+    <module>examples/universal-rollup</module>
   </modules>
 
 </project>
