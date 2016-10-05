@@ -72,6 +72,8 @@
     <module>jython</module>
     <module>examples/python</module>
     <module>examples/scala</module>
+    <module>examples/commonjs</module>
+    <module>examples/universal</module>
   </modules>
 
 </project>

@@ -6,11 +6,11 @@ import io.vertx.core.json.JsonObject;
 import javax.script.*;
 import java.io.File;
 
-public class NashornAMDVerticle extends AbstractVerticle {
+public class RequireJSVerticle extends AbstractVerticle {
 
   public void start() throws Exception {
-    // create a new AMD loader
-    final AMD loader = new AMD(vertx);
+    // create a new RequireJS loader
+    final RequireJS loader = new RequireJS(vertx);
 
     // configure the loader
     final JsonObject config = config();

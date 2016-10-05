@@ -12,13 +12,13 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import javax.script.*;
 import java.util.Locale;
 
-public final class AMD {
+public class Loader {
 
-  private final ScriptEngine engine;
+  private static final Logger log = LoggerFactory.getLogger(Loader.class);
 
-  private static final Logger log = LoggerFactory.getLogger(AMD.class);
+  protected final ScriptEngine engine;
 
-  public AMD(final Vertx vertx) throws ScriptException, NoSuchMethodException {
+  public Loader(final Vertx vertx) throws ScriptException, NoSuchMethodException {
     // create a engine instance
     engine = new ScriptEngineManager().getEngineByName("nashorn");
 
@@ -123,41 +123,30 @@ public final class AMD {
 
     // install the console object
     ((Invocable) engine).invokeFunction("load", "classpath:console.js");
-
     // update JSON to handle native JsonObject/JsonArray types
     ((Invocable) engine).invokeFunction("load", "classpath:JSON.js");
-
-    // loads the shims and AMD light
-
-    final Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
-    // bind vertx instance
-    bindings.put("vertx", vertx);
-    // delete any old setup
-    engine.eval("function (global) { if (global.define !== undefined) { delete global['define']; } }(this);");
-    // install the loader
-    ((Invocable) engine).invokeFunction("load", "classpath:amdlite.js");
-    // unbind vertx instance
-    bindings.remove("vertx");
-  }
-
-  public void config(final JsonObject config) throws ScriptException {
-    // configure the loader
-    engine.eval("try { define.amd.lite.config(" + config.encode() + "); } catch (e) { console.trace(e); throw e; }");
   }
 
   public ScriptEngine getEngine() {
     return engine;
   }
 
-  public void main(String main) throws ScriptException {
-    engine.eval("try { load('" + AMD.escapeJSString(main) + "'); } catch (e) { console.trace(e); throw e; }");
+  public void config(final JsonObject config) throws ScriptException {
+    final Bindings engineBindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
+    // expose the config as a global
+    engineBindings.put("config", config != null ? config.getMap() : null);
   }
 
-  public static String escapeJSString(String str) {
+  public void main(String main) throws ScriptException, NoSuchMethodException {
+    // install the console object
+    ((Invocable) engine).invokeFunction("load", main);
+  }
+
+  static String escapeJSString(String str) {
     return escapeJavaStyleString(str, false, false);
   }
 
-  public static String escapeJavaStyleString(String str, boolean escapeSingleQuote, boolean escapeForwardSlash) {
+  static String escapeJavaStyleString(String str, boolean escapeSingleQuote, boolean escapeForwardSlash) {
     if (str == null) {
       return null;
     }

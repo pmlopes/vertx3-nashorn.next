@@ -34,14 +34,14 @@ For this new loader there are several ground breaking changes:
 * No more CommonJS modules (not entirely true)
 * No need for maven (unless user needs extra java libraries bundled in the runner)
 * Currently no packaging is provided (distribution is left to the user)
-* A new loader based on AMD (this is small and allows a proper debugging experience)
+* A new loader based on RequireJS (this is small and allows a proper debugging experience)
 * Builtin support for ES6 using babel compiler as a loader plugin
 
 ### Additions
 
 There are several additions to the runtime:
 
-* AMD define function - the new loader
+* RequireJS define function - the new loader
 * Console object
 * type AMD plugin - helper to load any java type
 * quit and end functions properly end vert.x
@@ -192,7 +192,7 @@ a xml file. You should have the following:
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <manifestEntries>
                     <Main-Class>io.vertx.core.Launcher</Main-Class>
-                    <Main-Verticle>com.jetdrone.nashorn.next.NashornAMDVerticle</Main-Verticle>
+                    <Main-Verticle>com.jetdrone.nashorn.next.RequireJSVerticle</Main-Verticle>
                   </manifestEntries>
                 </transformer>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">

@@ -3,7 +3,6 @@ package com.jetdrone.nashorn.next;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.junit.*;
@@ -11,21 +10,17 @@ import org.junit.runner.RunWith;
 
 import javax.script.*;
 
-import java.io.*;
-import java.net.URL;
-
 import static org.junit.Assert.*;
 
 @RunWith(VertxUnitRunner.class)
 public class NativeJSONTest {
 
-  private static AMD amd;
   private static ScriptEngine engine;
 
   @BeforeClass
   public static void beforeClass() throws ScriptException, NoSuchMethodException {
-    amd = new AMD(Vertx.vertx());
-    engine = amd.getEngine();
+    Loader loader = new DummyLoader(Vertx.vertx());
+    engine = loader.getEngine();
   }
 
   @Test

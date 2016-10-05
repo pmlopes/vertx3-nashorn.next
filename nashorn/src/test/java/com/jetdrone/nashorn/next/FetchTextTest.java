@@ -1,8 +1,6 @@
 package com.jetdrone.nashorn.next;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -11,11 +9,6 @@ import org.junit.runner.RunWith;
 
 import javax.script.*;
 
-import java.io.*;
-import java.net.URL;
-
-import static org.junit.Assert.*;
-
 @RunWith(VertxUnitRunner.class)
 public class FetchTextTest {
 
@@ -23,7 +16,7 @@ public class FetchTextTest {
 
   @BeforeClass
   public static void beforeClass() throws ScriptException, NoSuchMethodException {
-    AMD amd = new AMD(Vertx.vertx());
+    Loader amd = new DummyLoader(Vertx.vertx());
     engine = amd.getEngine();
   }
 
