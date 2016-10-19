@@ -29,6 +29,10 @@ present.
 
 ## Proposed nashorn.next
 
+There are 2 main alternatives here:
+
+### Alternative #1
+
 For this new loader there are several ground breaking changes:
 
 * No more CommonJS modules (not entirely true)
@@ -37,7 +41,7 @@ For this new loader there are several ground breaking changes:
 * A new loader based on RequireJS (this is small and allows a proper debugging experience)
 * Builtin support for ES6 using babel compiler as a loader plugin
 
-### Additions
+#### Additions
 
 There are several additions to the runtime:
 
@@ -48,7 +52,7 @@ There are several additions to the runtime:
 * Nashorn JSON codec to eventbus
 * Enhanced JSON.stringify
 
-### AMD support
+#### AMD support
 
 The AMD loader currently supports (passes the official AMD test suite):
 
@@ -70,7 +74,7 @@ Plugin system limitations:
 
 * No support for dynamic plugins
 
-### AMD defined objects
+#### AMD defined objects
 
 The `define` function internally defines the following objects:
 
@@ -79,7 +83,7 @@ The `define` function internally defines the following objects:
 * `exports` basically like commonJS is a link to `module.exports`
 * `vertx` this is an extension and is a reference to the current running vertx instance.
 
-### Config the loader
+#### Config the loader
 
 The loader has a config function that can handle 3 types of configuration:
 
@@ -90,6 +94,18 @@ The loader has a config function that can handle 3 types of configuration:
 In order to provide this config you should have a JSON document with the desired config and be provided to the runner
 with `--conf your_json.json`. The runner is the base vert.x Loader so all flags are provided such as `--cluster`,
 etc....
+
+## Option #2
+
+Alternatively one can take a different approach. Why not just use the tooling that frontend developers are used too, for example:
+
+* Babel
+* Webpack
+
+By using this simple stack one can quickly solve the vast majority of the issues we're facing on nashorn as of today. We can use the latest language features of javascript (ES6) in contrast to (ES5) that nashorn supports. It solves the issue of module loading by resolving them from the current standard `npm` and bundle everything in a single file.
+
+This alternative is not perfect though, even though debugging does work it always refers to the single file, line column and not to the original source. The reason is that nashorn **does** support source location mapping but **not** source-maps. This could trigger and attempt to port the original sourcemap implementation made by mozilla to translate stacktraces at runtime. Again this approach would not solve the resolution of code points at runtime debugging.
+
 
 ### JS object and the eventbus
 
