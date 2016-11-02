@@ -74,6 +74,7 @@
     <module>examples/scala</module>
     <module>examples/universal</module>
     <module>examples/universal-rollup</module>
+    <module>examples/webpack-classic</module>
   </modules>
 
 </project>
