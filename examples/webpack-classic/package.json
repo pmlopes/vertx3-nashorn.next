@@ -9,9 +9,9 @@
     "install": "node ./webpack.config.js",
     "postinstall": "mvn clean package",
 
-    "build": "webpack",
+    "build": "./node_modules/.bin/webpack",
 
-    "prestart": "webpack",
+    "prestart": "./node_modules/.bin/webpack",
     "start": "java -jar run.jar",
 
     "watch": "npm run start -- --redeploy=\"src/**\" --on-redeploy=\"npm run watch\""
