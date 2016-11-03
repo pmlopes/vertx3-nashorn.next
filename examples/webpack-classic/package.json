@@ -10,6 +10,7 @@
     "postinstall": "mvn clean package",
 
     "build": "./node_modules/.bin/webpack",
+    "build:release": "./node_modules/.bin/webpack -p",
 
     "prestart": "./node_modules/.bin/webpack",
     "start": "java -jar run.jar",
