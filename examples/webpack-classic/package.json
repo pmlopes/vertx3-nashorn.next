@@ -9,6 +9,8 @@
     "install": "node ./webpack.config.js",
     "postinstall": "mvn clean package",
 
+    "build": "webpack",
+
     "prestart": "webpack",
     "start": "java -jar run.jar",
 
