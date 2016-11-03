@@ -2,7 +2,6 @@ var _package = require('./package.json');
 var fs = require('fs');
 var path = require('path');
 
-var output = 'server.js';
 var javaDependencies = _package.javaDependencies || {};
 var pom =
   '<?xml version="1.0" encoding="UTF-8"?>\n' +
@@ -17,7 +16,11 @@ var pom =
   '  <artifactId>' + _package.name + '</artifactId>\n' +
   '  <version>' + _package.version + '</version>\n' +
   '\n' +
+  '  <name>' + _package.name + '</name>\n' +
+  '  <description>' + (_package.description || '') + '</description>\n' +
+  '\n' +
   '  <dependencies>\n';
+
 
 for (dep in javaDependencies) {
   if (javaDependencies.hasOwnProperty(dep)) {
@@ -70,7 +73,7 @@ pom +=
   '                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">\n' +
   '                  <manifestEntries>\n' +
   '                    <Main-Class>io.vertx.core.Launcher</Main-Class>\n' +
-  '                    <Main-Verticle>' + output + '</Main-Verticle>\n' +
+  '                    <Main-Verticle>' + _package.mainVerticle + '</Main-Verticle>\n' +
   '                  </manifestEntries>\n' +
   '                </transformer>\n' +
   '                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">\n' +
@@ -99,7 +102,7 @@ module.exports = {
   entry: path.resolve(__dirname, 'src/main.js'),
 
   output: {
-    filename: output
+    filename: _package.mainVerticle
   },
 
   module: {

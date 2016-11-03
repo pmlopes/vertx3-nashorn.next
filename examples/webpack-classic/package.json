@@ -2,21 +2,32 @@
   "name": "webpack-classic",
   "version": "1.0.0",
   "description": "",
+
+  "mainVerticle": "server.js",
+
   "scripts": {
-    "install": "./webpack.config.js",
+    "install": "node ./webpack.config.js",
     "postinstall": "mvn clean package",
-    "build": "webpack"
+
+    "prestart": "webpack",
+    "start": "java -jar run.jar",
+
+    "watch": "npm run start -- --redeploy=\"src/**\" --on-redeploy=\"npm run watch\""
   },
+
   "author": "Paulo Lopes",
   "license": "MIT",
+
   "dependencies": {
   },
+
   "devDependencies": {
     "babel-core": "^6.5.1",
     "babel-loader": "^6.2.2",
     "babel-preset-es2015": "^6.5.0",
     "webpack": "^1.12.13"
   },
+
   "javaDependencies": {
     "io.vertx:vertx-lang-js": "3.3.3",
     "io.vertx:vertx-web": "3.3.3"
