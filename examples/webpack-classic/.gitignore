@@ -1,8 +1,6 @@
+pom.xml
 server.js
 target
 .vertx
 run.jar
-!node_modules/vertx-js
-!node_modules/vertx-auth-common-js
-!node_modules/vertx-web-js
 node_modules
