@@ -7,35 +7,32 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
-import javax.script.Invocable;
 import javax.script.ScriptEngine;
-import javax.script.ScriptException;
 import java.util.List;
 import java.util.Map;
 
 public class NashornJSObjectMessageCodec implements MessageCodec<ScriptObjectMirror, Object> {
 
-  private final ScriptEngine engine;
-  private final Object JSON;
-  private final Object Java;
+  private final ScriptObjectMirror JSON;
+  private final ScriptObjectMirror Java;
 
   public NashornJSObjectMessageCodec(ScriptEngine engine) {
-    this.engine = engine;
-    JSON = engine.get("JSON");
-    Java = engine.get("Java");
+    JSON = (ScriptObjectMirror) engine.get("JSON");
+    Java = (ScriptObjectMirror) engine.get("Java");
+  }
+
+  public NashornJSObjectMessageCodec(ScriptObjectMirror JSON, ScriptObjectMirror Java) {
+    this.JSON = JSON;
+    this.Java = Java;
   }
 
   @Override
   public void encodeToWire(Buffer buffer, ScriptObjectMirror jsObject) {
-    try {
-      String strJson = (String) ((Invocable) engine).invokeMethod(JSON, "stringify", jsObject);
-      byte[] encoded = strJson.getBytes(CharsetUtil.UTF_8);
-      buffer.appendInt(encoded.length);
-      Buffer buff = Buffer.buffer(encoded);
-      buffer.appendBuffer(buff);
-    } catch (ScriptException | NoSuchMethodException e) {
-      throw new RuntimeException(e);
-    }
+    String strJson = (String) JSON.callMember("stringify", jsObject);
+    byte[] encoded = strJson.getBytes(CharsetUtil.UTF_8);
+    buffer.appendInt(encoded.length);
+    Buffer buff = Buffer.buffer(encoded);
+    buffer.appendBuffer(buff);
   }
 
   @Override
@@ -49,19 +46,15 @@ public class NashornJSObjectMessageCodec implements MessageCodec<ScriptObjectMir
 
   @Override
   public Object transform(ScriptObjectMirror jsObject) {
-    try {
-      Object compat = ((Invocable) engine).invokeMethod(Java, "asJSONCompatible", jsObject);
-      if (compat instanceof Map) {
-        return new JsonObject((Map) compat);
-      }
-      if (compat instanceof List) {
-        return new JsonArray((List) compat);
-      }
-
-      return compat;
-    } catch (ScriptException | NoSuchMethodException e) {
-      throw new RuntimeException(e);
+    Object compat = Java.callMember("asJSONCompatible", jsObject);
+    if (compat instanceof Map) {
+      return new JsonObject((Map) compat);
     }
+    if (compat instanceof List) {
+      return new JsonArray((List) compat);
+    }
+
+    return compat;
   }
 
   @Override

@@ -75,6 +75,7 @@
     <module>examples/universal</module>
     <module>examples/universal-rollup</module>
     <module>examples/webpack-classic</module>
+    <module>examples/jjs</module>
   </modules>
 
 </project>
