@@ -121,6 +121,8 @@ public class Loader {
 
     engine.setBindings(globalBindings, ScriptContext.GLOBAL_SCOPE);
 
+    // load polyfills
+    ((Invocable) engine).invokeFunction("load", "classpath:polyfill.js");
     // install the console object
     ((Invocable) engine).invokeFunction("load", "classpath:console.js");
     // update JSON to handle native JsonObject/JsonArray types

@@ -1,11 +1,17 @@
 // This is a similar bootstrap script to JSVerticle, it is useful when working with JJS repl.
 vertx = (function (global) {
+  if (global.vertx) {
+    return;
+  }
+
   var Vertx = Java.type('io.vertx.core.Vertx');
   var NashornJSObjectMessageCodec = Java.type('com.jetdrone.nashorn.next.NashornJSObjectMessageCodec');
 
   // the vertx instance
   var vertx = Vertx.vertx();
 
+  // load polyfills
+  load('classpath:polyfill.js');
   // install the console object
   load('classpath:console.js');
   // update JSON to handle native JsonObject/JsonArray types

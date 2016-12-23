@@ -1,5 +1,5 @@
 // Rollup plugins.
-import babel from 'rollup-plugin-babel'
+import buble from 'rollup-plugin-buble'
 import cjs from 'rollup-plugin-commonjs'
 import globals from 'rollup-plugin-node-globals'
 import replace from 'rollup-plugin-replace'
@@ -10,13 +10,7 @@ export default {
   entry: 'src/index.js',
   format: 'iife',
   plugins: [
-    babel({
-      exclude: 'node_modules/**',
-      presets: [['es2015', {'modules': false}], 'react'],
-      'plugins': [
-        'external-helpers'
-      ]
-    }),
+    buble(),
     cjs({
       exclude: 'node_modules/process-es6/**',
       include: [
@@ -25,16 +19,11 @@ export default {
         'node_modules/react/**',
         'node_modules/react-dom/**',
         'node_modules/react-router/**'
-      ],
-      namedExports: {
-        'node_modules/react/react.js': ['Component', 'Children', 'createElement', 'PropTypes'],
-        'node_modules/react-dom/index.js': ['render']
-      }
+      ]
     }),
     globals(),
     replace({'process.env.NODE_ENV': JSON.stringify('development')}),
     resolve({
-      jsnext: true,
       browser: true,
       main: true
     })

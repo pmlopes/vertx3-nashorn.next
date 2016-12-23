@@ -6,7 +6,7 @@ import uglify from 'rollup-plugin-uglify'
 import config from './server'
 
 // Inject the production settings.
-config.plugins[3] = replace({ 'process.env.NODE_ENV': JSON.stringify('production') });
+config.plugins[2] = replace({ 'process.env.NODE_ENV': JSON.stringify('production') });
 config.plugins.push(uglify());
 
 export default config
