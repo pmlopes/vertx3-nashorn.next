@@ -74,7 +74,7 @@ if ('install' === process.env.npm_lifecycle_event) {
     '                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">\n' +
     '                  <manifestEntries>\n' +
     '                    <Main-Class>io.vertx.core.Launcher</Main-Class>\n' +
-    '                    <Main-Verticle>com.jetdrone.nashorn.next.JSVerticle</Main-Verticle>\n' +
+    '                    <Main-Verticle>' + _package.mainVerticle + '</Main-Verticle>\n' +
     '                  </manifestEntries>\n' +
     '                </transformer>\n' +
     '                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">\n' +

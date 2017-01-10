@@ -1,4 +1,7 @@
 (function (global) {
+  'use strict';
+
+  var Vertx = Java.type('io.vertx.core.Vertx');
 
   function noop() {}
 
@@ -16,6 +19,7 @@
     this._handled = false;
     this._value = undefined;
     this._deferreds = [];
+    this._context = Vertx.currentContext();
 
     doResolve(fn, this);
   }
@@ -29,7 +33,7 @@
       return;
     }
     self._handled = true;
-    Promise._immediateFn(function () {
+    Promise._immediateFn(self._context, function () {
       var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected;
       if (cb === null) {
         (self._state === 1 ? resolve : reject)(deferred.promise, self._value);
@@ -78,7 +82,7 @@
 
   function finale(self) {
     if (self._state === 2 && self._deferreds.length === 0) {
-      Promise._immediateFn(function() {
+      Promise._immediateFn(self._context, function() {
         if (!self._handled) {
           Promise._unhandledRejectionFn(self._value);
         }
@@ -190,11 +194,13 @@
     });
   };
 
-  // Use polyfill for setImmediate for performance gains
-  Promise._immediateFn = (typeof setImmediate === 'function' && function (fn) { setImmediate(fn); }) ||
-    function (fn) {
+  Promise._immediateFn = function (ctx, fn) {
+    if (ctx != null) {
+      ctx.runOnContext(fn);
+    } else {
       vertx.runOnContext(fn);
-    };
+    }
+  };
 
   Promise._unhandledRejectionFn = function _unhandledRejectionFn(err) {
     if (typeof console !== 'undefined' && console) {
@@ -203,46 +209,31 @@
   };
 
   /**
-   * Set the immediate function to execute callbacks
-   * @param fn {function} Function to execute
-   * @deprecated
-   */
-  Promise._setImmediateFn = function _setImmediateFn(fn) {
-    Promise._immediateFn = fn;
-  };
-
-  /**
-   * Change the function to execute on unhandled rejection
-   * @param {function} fn Function to execute on unhandled rejection
-   * @deprecated
-   */
-  Promise._setUnhandledRejectionFn = function _setUnhandledRejectionFn(fn) {
-    Promise._unhandledRejectionFn = fn;
-  };
-
-  /**
    * Extension (not real part of the spec but nice to have for vert.x)
    * @param {object} obj native vert.x object
-   * @param {string} fn the method name to replace the last argument from Handler<AsyncResult<T>> to a promise.
    * @return wrapper function that follows the promise flow.
    */
-  Promise.devertxify = function devertxify(obj, fn) {
-    var args = [obj].concat(Array.prototype.slice.call(arguments, 2));
-    return new Promise(function (resolve, reject) {
-      args.push(function (res) {
-        if (res.failed()) {
-          reject(res.cause());
-        } else {
-          resolve(res.result());
-        }
-      });
-      Function.call.apply(obj[fn], args);
-    });
+  Promise.devertxify = function devertxify(obj) {
+    return {
+      __noSuchMethod__: function () {
+        var fn = arguments[0];
+        var args = [obj].concat(Array.prototype.slice.call(arguments, 1));
+
+        return new Promise(function (resolve, reject) {
+          args.push(function (res) {
+            if (res.failed()) {
+              reject(res.cause());
+            } else {
+              resolve(res.result());
+            }
+          });
+          Function.call.apply(obj[fn], args);
+        });
+      }
+    };
   };
 
-  if (typeof module !== 'undefined' && module.exports) {
-    module.exports = Promise;
-  } else if (!global.Promise) {
+  if (!global.Promise) {
     global.Promise = Promise;
   }
 

@@ -6,10 +6,11 @@ const WebClient = Java.type('io.vertx.webclient.WebClient');
 (async function () {
   // error handling can be done with try catch
   try {
+    let webClient = WebClient.create(vertx).get(80, "www.google.com", "/");
     // since vertx API is callback style we need to convert that into a Promise style, either you do it manually
-    // or use this helper that takes 2+ arguments: java object, java method name, all extra arguments you would
-    // pass to the method (except the final handler of course)
-    let response = await Promise.devertxify(WebClient.create(vertx).get(80, "www.google.com", "/"), 'send');
+    // or use this helper that wraps a object and returns a proxy that adds a extra last parameter to all method
+    // calls that handles the async result objects
+    let response = await Promise.devertxify(webClient).send();
     // there was no threads involved in this code, the call was async and run on vert.x event loop
     // however you did not need to create callbacks and chain functions! hurray!!!
     console.log("Received response with status code: " + response.statusCode());

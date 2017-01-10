@@ -51,8 +51,11 @@
       return new JsonArray(nativeJSON);
     }
 
-    if (val instanceof Map) {
+    if (nativeJSON instanceof Map) {
       return new JsonObject(nativeJSON);
     }
+
+    // fallback
+    return nativeJSON;
   };
 })(JSON);
