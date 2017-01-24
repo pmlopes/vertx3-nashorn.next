@@ -1,0 +1,8 @@
+[ignore]
+
+[include]
+
+[libs]
+./decl/index.js
+
+[options]

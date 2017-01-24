@@ -1,3 +1,4 @@
+/* @flow */
 const posts = require('./posts');
 
 const Router = require("vertx-web-js/router");
