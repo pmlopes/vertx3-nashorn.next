@@ -64,6 +64,7 @@
 
   <modules>
     <module>nashorn</module>
+    <module>services</module>
     <module>examples/bare</module>
     <module>examples/web</module>
     <module>examples/es6</module>
