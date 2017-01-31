@@ -76,6 +76,9 @@
     <module>examples/universal</module>
     <module>examples/universal-rollup</module>
     <module>examples/jjs</module>
+    <module>factories/nashorn</module>
+    <module>factories/jython</module>
+    <module>examples/python-service</module>
   </modules>
 
 </project>

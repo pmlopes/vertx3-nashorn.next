@@ -91,7 +91,7 @@ if ('install' === process.env.npm_lifecycle_event) {
     '</project>\n';
 
   // mkdir -p .vertx
-  fs.mkdir(path.resolve(__dirname, '.vertx'),function(err){
+  fs.mkdir(path.resolve(__dirname, '.vertx'), function (err) {
     if (!err || (err && err.code === 'EEXIST')) {
       // generate pom.xml
       fs.writeFile(path.resolve(__dirname, '.vertx/pom.xml'), pom, function (err) {
@@ -119,7 +119,7 @@ module.exports = {
 
   module: {
     loaders: [
-      {test: /\.js$/, exclude: /node_modules/, loader: 'babel-loader'}
+      { test: /\.js$/, exclude: /node_modules/, loader: 'babel-loader' }
     ]
   }
 };
